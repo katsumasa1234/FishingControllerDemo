@@ -19,7 +19,7 @@ class RosController(ip: String, listener: WebSocketListener) {
         wsc.send(advertiseMsg.toString())
     }
 
-    fun publish(topic: String, data: Float) {
+    fun publish(topic: String, data: String) {
         val publishMsg = JSONObject().apply {
             put("op", "publish")
             put("topic", topic)

@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 connectStateText = "接続しました"
                 ros!!.publisher("/fish/ctrl/imu", "sensor_msgs/msg/Imu")
-                ros!!.publisher("/fish/ctrl/out", "std_msgs/msg/Float32")
+                ros!!.publisher("/fish/ctrl/out", "std_msgs/msg/String")
                 ros!!.subscriber("/fish/ctrl/in", "std_msgs/msg/String")
                 disconnectButtonEnable = true
             }
@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
             while (true) {
                 imuStateText = "加速度：${imu!!.getLinearAccelerationText(3)}\n角速度：${imu!!.getAngularVelocityText(3)}"
                 ros?.publishIMU(imu!!)
-                ros?.publish("/fish/ctrl/out", rotationSpeed.toFloatOrNull() ?: 0f)
+                ros?.publish("/fish/ctrl/out", id + "," + (rotationSpeed.toFloatOrNull() ?: 0f))
                 delay(100)
             }
         }
