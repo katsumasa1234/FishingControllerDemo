@@ -6,8 +6,8 @@ import org.json.JSONObject
 class RosController(ip: String, listener: WebSocketListener) {
     private val wsc: WebSocketController = WebSocketController(ip, listener)
 
-    fun publishIMU(imu: IMU) {
-        wsc.send(imu.getImuJson().toString())
+    fun publishIMU(sensorController: SensorController) {
+        wsc.send(sensorController.getImuJson().toString())
     }
 
     fun publisher(topic: String, type:String) {

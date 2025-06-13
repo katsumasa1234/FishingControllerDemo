@@ -34,17 +34,17 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 
 class MainActivity : ComponentActivity() {
-    private var imu: IMU? = null
+    private var sensorController: SensorController? = null
     private var ros: RosController? = null
 
     override fun onStart() {
         super.onStart()
-        imu = IMU(applicationContext)
+        sensorController = SensorController(applicationContext)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        imu?.close()
+        sensorController?.close()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,8 +104,8 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             while (true) {
-                imuStateText = "加速度：${imu!!.getLinearAccelerationText(3)}\n角速度：${imu!!.getAngularVelocityText(3)}"
-                ros?.publishIMU(imu!!)
+                imuStateText = "加速度：${sensorController!!.getLinearAccelerationText(3)}\n角速度：${sensorController!!.getAngularVelocityText(3)}\n地磁気：${sensorController!!.getMagneticFieldText(3)}"
+                ros?.publishIMU(sensorController!!)
                 ros?.publish("/fish/ctrl/out", id + "," + (rotationSpeed.toFloatOrNull() ?: 0f))
                 delay(100)
             }
@@ -146,7 +146,7 @@ class MainActivity : ComponentActivity() {
             value = id,
             onValueChange = {
                 id = it
-                imu?.setID(id)
+                sensorController?.setID(id)
             },
             label = { Text(text  = "ID") }
         )

@@ -5,25 +5,27 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.widget.Toast
 import org.json.JSONArray
 import org.json.JSONObject
 
-class IMU(private val context: Context) : SensorEventListener {
+class SensorController(private val context: Context) : SensorEventListener {
     private var frameId = ""
-    private val topic = "/fish/ctrl/imu"
+    private val imuTopic = "/fish/ctrl/imu"
     private var orientation: Quaternion = Quaternion(0.0, 0.0, 0.0, -1.0)
     private var angularVelocity: Triple<Double, Double, Double> = Triple(0.0, 0.0, 0.0)
     private var linearAcceleration: Triple<Double, Double, Double> = Triple(0.0, 0.0, 0.0)
+    private var magneticField: Triple<Double, Double, Double> = Triple(0.0, 0.0, 0.0)
     private var includeOrientation: Boolean = false
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    private val accel = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     private val gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+    private val magnetic = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
     init {
         sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_GAME)
         sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME)
+        sensorManager.registerListener(this, magnetic, SensorManager.SENSOR_DELAY_GAME)
     }
 
     fun setID(id: String) {
@@ -52,13 +54,18 @@ class IMU(private val context: Context) : SensorEventListener {
         return "(%${allDigits}.${digits}f, %${allDigits}.${digits}f, %${allDigits}.${digits}f)".format(angularVelocity.first, angularVelocity.second, angularVelocity.third)
     }
 
+    fun getMagneticFieldText(digits: Int): String {
+        val allDigits = 5 + digits
+        return "(%${allDigits}.${digits}f, %${allDigits}.${digits}f, %${allDigits}.${digits}f)".format(magneticField.first, magneticField.second, magneticField.third)
+    }
+
     fun getImuJson(): JSONObject {
         val currentTimeMillis = System.currentTimeMillis()
         val currentNano = System.nanoTime()
 
         val imuMsg = JSONObject()
         imuMsg.put("op", "publish")
-        imuMsg.put("topic", topic)
+        imuMsg.put("topic", imuTopic)
 
         val msg = JSONObject()
 
@@ -105,13 +112,17 @@ class IMU(private val context: Context) : SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
-            Sensor.TYPE_ACCELEROMETER -> {
+            Sensor.TYPE_LINEAR_ACCELERATION -> {
                 val value = event.values.clone()
                 linearAcceleration = Triple(value[0].toDouble(), value[1].toDouble(), value[2].toDouble())
             }
             Sensor.TYPE_GYROSCOPE -> {
                 val value = event.values.clone()
                 angularVelocity = Triple(value[0].toDouble(), value[1].toDouble(), value[2].toDouble())
+            }
+            Sensor.TYPE_MAGNETIC_FIELD -> {
+                val value = event.values.clone()
+                magneticField = Triple(value[0].toDouble(), value[1].toDouble(), value[2].toDouble())
             }
         }
     }
