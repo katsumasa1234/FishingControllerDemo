@@ -1,6 +1,7 @@
 package com.katsumasa.fishingcontrollerdemo
 
 import android.content.Context
+import android.graphics.drawable.GradientDrawable.Orientation
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -14,18 +15,16 @@ class SensorController(private val context: Context) : SensorEventListener {
     private var orientation: Quaternion = Quaternion(0.0, 0.0, 0.0, -1.0)
     private var angularVelocity: Triple<Double, Double, Double> = Triple(0.0, 0.0, 0.0)
     private var linearAcceleration: Triple<Double, Double, Double> = Triple(0.0, 0.0, 0.0)
-    private var magneticField: Triple<Double, Double, Double> = Triple(0.0, 0.0, 0.0)
-    private var includeOrientation: Boolean = false
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val accel = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     private val gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-    private val magnetic = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+    private val rotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
 
     init {
         sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_GAME)
         sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME)
-        sensorManager.registerListener(this, magnetic, SensorManager.SENSOR_DELAY_GAME)
+        sensorManager.registerListener(this, rotation, SensorManager.SENSOR_DELAY_GAME)
     }
 
     fun setID(id: String) {
@@ -54,9 +53,9 @@ class SensorController(private val context: Context) : SensorEventListener {
         return "(%${allDigits}.${digits}f, %${allDigits}.${digits}f, %${allDigits}.${digits}f)".format(angularVelocity.first, angularVelocity.second, angularVelocity.third)
     }
 
-    fun getMagneticFieldText(digits: Int): String {
+    fun getOrientationText(digits: Int): String {
         val allDigits = 5 + digits
-        return "(%${allDigits}.${digits}f, %${allDigits}.${digits}f, %${allDigits}.${digits}f)".format(magneticField.first, magneticField.second, magneticField.third)
+        return "(%${allDigits}.${digits}f, %${allDigits}.${digits}f, %${allDigits}.${digits}f, %${allDigits}.${digits}f)".format(orientation.x, orientation.y, orientation.z, orientation.w)
     }
 
     fun getImuJson(): JSONObject {
@@ -78,11 +77,7 @@ class SensorController(private val context: Context) : SensorEventListener {
         }
         msg.put("header", header)
 
-        val orientationCovariance = if (includeOrientation) {
-            JSONArray(List(9) { 0.0 }) // 実際の共分散を計算するならここに入れる
-        } else {
-            JSONArray(listOf(-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
-        }
+        val orientationCovariance = JSONArray(listOf(-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
 
         msg.put("orientation", JSONObject().apply {
             put("x", orientation.x)
@@ -120,9 +115,11 @@ class SensorController(private val context: Context) : SensorEventListener {
                 val value = event.values.clone()
                 angularVelocity = Triple(value[0].toDouble(), value[1].toDouble(), value[2].toDouble())
             }
-            Sensor.TYPE_MAGNETIC_FIELD -> {
+            Sensor.TYPE_ROTATION_VECTOR -> {
                 val value = event.values.clone()
-                magneticField = Triple(value[0].toDouble(), value[1].toDouble(), value[2].toDouble())
+                val q = FloatArray(4)
+                SensorManager.getQuaternionFromVector(q, value)
+                orientation = Quaternion(q[0].toDouble(), q[1].toDouble(), q[2].toDouble(), q[3].toDouble())
             }
         }
     }

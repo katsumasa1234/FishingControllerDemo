@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             while (true) {
-                imuStateText = "加速度：${sensorController!!.getLinearAccelerationText(3)}\n角速度：${sensorController!!.getAngularVelocityText(3)}\n地磁気：${sensorController!!.getMagneticFieldText(3)}"
+                imuStateText = "加速度：${sensorController!!.getLinearAccelerationText(3)}\n角速度：${sensorController!!.getAngularVelocityText(3)}\nOrientation：${sensorController!!.getOrientationText(3)}"
                 ros?.publishIMU(sensorController!!)
                 ros?.publish("/fish/ctrl/out", id + "," + (rotationSpeed.toFloatOrNull() ?: 0f))
                 delay(100)
