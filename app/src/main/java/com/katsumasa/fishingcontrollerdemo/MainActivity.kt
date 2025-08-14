@@ -105,6 +105,7 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(Unit) {
             while (true) {
                 imuStateText = "加速度：${sensorController!!.getLinearAccelerationText(3)}\n角速度：${sensorController!!.getAngularVelocityText(3)}\nOrientation：${sensorController!!.getOrientationText(3)}"
+                sensorController?.setID(id)
                 ros?.publishIMU(sensorController!!)
                 ros?.publish("/fish/ctrl/out", id + "," + (rotationSpeed.toFloatOrNull() ?: 0f))
                 delay(100)
@@ -117,8 +118,7 @@ class MainActivity : ComponentActivity() {
             onValueChange = { ip = it },
             label = { Text("ROS Server's IP") },
             singleLine = true,
-            enabled = connectButtonEnable,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            enabled = connectButtonEnable
         )
         Spacer(modifier = Modifier.size(30.dp))
         Row {
@@ -146,7 +146,6 @@ class MainActivity : ComponentActivity() {
             value = id,
             onValueChange = {
                 id = it
-                sensorController?.setID(id)
             },
             label = { Text(text  = "ID") }
         )

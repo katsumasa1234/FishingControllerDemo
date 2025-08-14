@@ -1,7 +1,6 @@
 package com.katsumasa.fishingcontrollerdemo
 
 import android.content.Context
-import android.graphics.drawable.GradientDrawable.Orientation
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -77,7 +76,7 @@ class SensorController(private val context: Context) : SensorEventListener {
         }
         msg.put("header", header)
 
-        val orientationCovariance = JSONArray(listOf(-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+        val orientationCovariance = JSONArray(listOf(0.1123432432, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
 
         msg.put("orientation", JSONObject().apply {
             put("x", orientation.x)
